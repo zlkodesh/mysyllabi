@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MySyllabi — Turn your syllabus into a smart calendar</title>
+<meta name="description" content="Upload your college syllabus and instantly get an interactive calendar with all your assignments, exams, and deadlines.">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f1f4f9; --surface: #fff; --surface2: #f8fafc; --surface3: #eef2f7;
+  --text: #0f172a; --text2: #64748b; --text3: #cbd5e1;
+  --line: #e8edf4; --line2: #dde3ee;
+  --indigo: #6366f1; --indigo-soft: #eef2ff; --indigo-text: #4338ca; --indigo-mid: #818cf8;
+  --red: #dc2626; --red-soft: #fee2e2; --red-text: #991b1b;
+  --blue: #2563eb; --blue-soft: #eff6ff; --blue-text: #1d4ed8;
+  --amber: #d97706; --amber-soft: #fef3c7; --amber-text: #92400e;
+  --green: #16a34a; --green-soft: #dcfce7; --green-text: #15803d;
+  --shadow: 0 1px 3px rgba(15,23,42,0.07), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md: 0 4px 6px rgba(15,23,42,0.06), 0 2px 4px rgba(15,23,42,0.04);
+  --shadow-lg: 0 10px 25px rgba(15,23,42,0.12), 0 4px 10px rgba(15,23,42,0.06);
+}
+.dark {
+  --bg: #080c14; --surface: #0f172a; --surface2: #1e293b; --surface3: #1a2540;
+  --text: #e2e8f4; --text2: #64748b; --text3: #334155;
+  --line: #1e293b; --line2: #263045;
+  --indigo: #818cf8; --indigo-soft: #1e1b4b; --indigo-text: #a5b4fc; --indigo-mid: #a5b4fc;
+  --red: #f87171; --red-soft: #2d1515; --red-text: #fca5a5;
+  --blue: #60a5fa; --blue-soft: #1e3a5f; --blue-text: #93c5fd;
+  --amber: #fbbf24; --amber-soft: #2d1f05; --amber-text: #fcd34d;
+  --green: #4ade80; --green-soft: #0f2515; --green-text: #4ade80;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.25);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.4);
+}
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 13px; transition: background 0.25s, color 0.25s; min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1; }
+#wrap { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+/* ── TOPBAR ── */
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.logo { font-size: 21px; font-weight: 800; color: var(--text); letter-spacing: -0.6px; }
+.logo em { font-style: normal; color: var(--indigo); }
+.tagline { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.tbtn { padding: 5px 13px; border-radius: 20px; border: 1px solid var(--line2); background: var(--surface); color: var(--text2); font-size: 11px; font-weight: 500; cursor: pointer; box-shadow: var(--shadow); transition: all 0.15s; }
+.tbtn:hover { color: var(--text); }
+
+/* ── HERO / LANDING ── */
+.hero { background: var(--surface); border-radius: 16px; border: 1px solid var(--line); box-shadow: var(--shadow-md); padding: 2rem 2rem 1.75rem; margin-bottom: 1.25rem; }
+.hero-title { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; margin-bottom: 8px; }
+.hero-title span { color: var(--indigo); }
+.hero-sub { font-size: 13px; color: var(--text2); line-height: 1.7; max-width: 540px; margin-bottom: 1.25rem; }
+.hero-features { display: flex; flex-wrap: wrap; gap: 8px; }
+.feature-pill { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: var(--surface2); border: 1px solid var(--line2); font-size: 11px; font-weight: 500; color: var(--text2); }
+.feature-pill .fp-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── UPLOAD CARD ── */
+.upload-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--line); box-shadow: var(--shadow-md); padding: 1.25rem; margin-bottom: 1.25rem; }
+#dz { border: 1.5px dashed var(--line2); border-radius: 10px; padding: 1.75rem 1rem; text-align: center; cursor: pointer; transition: background 0.12s, border-color 0.12s; }
+#dz:hover, #dz.over { background: var(--surface2); border-color: var(--indigo-mid); }
+#dz input { display: none; }
+.dz-icon { font-size: 24px; margin-bottom: 8px; opacity: 0.35; }
+.dz-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.dz-sub { font-size: 11px; color: var(--text2); }
+.or { display: flex; align-items: center; gap: 8px; margin: 10px 0; font-size: 11px; color: var(--text3); }
+.or::before, .or::after { content: ''; flex: 1; height: 1px; background: var(--line2); }
+#demo-btn { width: 100%; padding: 9px; border-radius: 8px; border: 1px solid var(--line2); background: var(--surface2); color: var(--text2); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.12s; }
+#demo-btn:hover { background: var(--surface3); color: var(--text); }
+#parse-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; background: var(--indigo); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: opacity 0.12s; display: none; }
+#parse-btn:hover { opacity: 0.88; }
+#parse-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+#fname { font-size: 11px; color: var(--indigo-mid); margin-top: 6px; min-height: 14px; }
+#status { font-size: 11px; min-height: 14px; margin-top: 4px; color: var(--text2); }
+#status.err { color: var(--red); }
+#status.ok { color: var(--green); font-weight: 600; }
+#syllabi-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.syllabus-chip { display: flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; border: 1px solid var(--line2); background: var(--surface2); }
+.chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.chip-x { margin-left: 4px; cursor: pointer; color: var(--text3); font-size: 13px; line-height: 1; transition: color 0.12s; }
+.chip-x:hover { color: var(--red); }
+
+/* ── MAIN APP ── */
+#main { display: none; }
+.metric-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+.metric { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+.metric-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.metric-icon.done { background: var(--green-soft); }
+.metric-icon.left { background: var(--indigo-soft); }
+.metric-icon.next { background: var(--amber-soft); }
+.metric-num { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1; }
+.metric-label { font-size: 10px; color: var(--text2); margin-top: 2px; }
+.metric-next-val { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1; }
+.metric-next-sub { font-size: 10px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+
+/* ── LAYOUT ── */
+.layout { display: grid; grid-template-columns: 1fr 200px; gap: 14px; align-items: start; }
+.cal-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--line); box-shadow: var(--shadow-md); overflow: hidden; width: 100%; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--surface2); }
+#mlabel { font-size: 14px; font-weight: 700; color: var(--text); }
+.nav { display: flex; gap: 4px; }
+.nbtn { width: 27px; height: 27px; border-radius: 7px; border: 1px solid var(--line2); background: var(--surface); color: var(--text2); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); transition: all 0.12s; }
+.nbtn:hover { background: var(--surface3); color: var(--text); }
+#filter-row { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.filter-chip { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid var(--line2); background: var(--surface2); color: var(--text2); cursor: pointer; transition: all 0.12s; }
+.filter-chip.active { color: #fff; border-color: transparent; }
+.filter-chip.all.active { background: var(--indigo); }
+.cal-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.cal-table th { font-size: 9px; font-weight: 700; color: var(--text3); text-align: center; padding: 7px 0; text-transform: uppercase; letter-spacing: 0.07em; background: var(--surface2); border-bottom: 1px solid var(--line); width: calc(100% / 7); }
+.cal-table td { vertical-align: top; width: calc(100% / 7); height: 72px; padding: 5px 5px 4px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); cursor: pointer; transition: background 0.1s; }
+.cal-table tr td:last-child { border-right: none; }
+.cal-table tbody tr:last-child td { border-bottom: none; }
+.cal-table td:hover { background: var(--surface2); }
+.cal-table td.other { background: var(--surface2); cursor: default; }
+.cal-table td.other:hover { background: var(--surface2); }
+.cal-table td.other .cnum { color: var(--text3); }
+.cal-table td.today { background: var(--indigo-soft); }
+.cal-table td.today:hover { background: var(--indigo-soft); }
+.cnum { font-size: 11px; font-weight: 600; color: var(--text3); margin-bottom: 3px; display: block; }
+.cal-table td.today .cnum { color: var(--indigo-text); font-weight: 800; }
+.tiny-pill { font-size: 9px; padding: 2px 4px; border-radius: 4px; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; display: block; line-height: 1.5; }
+.tiny-pill.exam { background: var(--red-soft); color: var(--red-text); }
+.tiny-pill.assignment { background: var(--blue-soft); color: var(--blue-text); }
+.tiny-pill.quiz { background: var(--amber-soft); color: var(--amber-text); }
+.tiny-pill.other { background: var(--surface3); color: var(--text2); }
+.dot-row { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot.exam { background: var(--red); }
+.dot.assignment { background: var(--blue); }
+.dot.quiz { background: var(--amber); }
+.dot.other { background: var(--text3); }
+
+/* ── SIDEBAR ── */
+.sb { display: flex; flex-direction: column; gap: 10px; }
+.sb-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 13px; }
+.sb-title { font-size: 9px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+.stat-g { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.stat { background: var(--surface2); border-radius: 8px; padding: 8px 5px; text-align: center; }
+.sn { font-size: 19px; font-weight: 800; color: var(--indigo); }
+.sl { font-size: 9px; color: var(--text2); margin-top: 1px; }
+.leg { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+.leg:last-child { margin-bottom: 0; }
+.ldot { width: 8px; height: 8px; border-radius: 50%; }
+.up-item { display: flex; align-items: flex-start; gap: 7px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.up-item:last-child { border-bottom: none; padding-bottom: 0; }
+.udot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.udot.exam { background: var(--red); }
+.udot.assignment { background: var(--blue); }
+.udot.quiz { background: var(--amber); }
+.udot.other { background: var(--text3); }
+.up-info { flex: 1; min-width: 0; }
+.up-name { font-size: 11px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-course { font-size: 9px; color: var(--text2); margin-top: 1px; }
+.up-date { font-size: 10px; color: var(--text2); white-space: nowrap; margin-top: 1px; }
+.no-up { font-size: 11px; color: var(--text3); }
+.exp-btn { width: 100%; padding: 9px; border-radius: 8px; border: 1px solid var(--indigo); background: var(--indigo-soft); color: var(--indigo-text); font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.12s; }
+.exp-btn:hover { background: var(--indigo); color: #fff; }
+
+/* ── POPUP ── */
+.popup-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.popup-overlay.show { opacity: 1; pointer-events: all; }
+.popup { background: var(--surface); border-radius: 16px; border: 1px solid var(--line); box-shadow: var(--shadow-lg); padding: 1.25rem; width: 300px; max-width: 90vw; transform: translateY(8px); transition: transform 0.2s; }
+.popup-overlay.show .popup { transform: translateY(0); }
+.popup-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.popup-date { font-size: 15px; font-weight: 700; color: var(--text); }
+.popup-close { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--line2); background: var(--surface2); color: var(--text2); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.popup-close:hover { background: var(--surface3); }
+.popup-event { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; }
+.popup-event:last-child { margin-bottom: 0; }
+.popup-event.exam { background: var(--red-soft); }
+.popup-event.assignment { background: var(--blue-soft); }
+.popup-event.quiz { background: var(--amber-soft); }
+.popup-event.other { background: var(--surface2); }
+.pe-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.pe-dot.exam { background: var(--red); }
+.pe-dot.assignment { background: var(--blue); }
+.pe-dot.quiz { background: var(--amber); }
+.pe-dot.other { background: var(--text3); }
+.pe-title { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.4; }
+.pe-meta { font-size: 10px; color: var(--text2); margin-top: 2px; }
+.pe-type { display: inline-block; font-size: 9px; padding: 1px 6px; border-radius: 10px; font-weight: 700; margin-top: 3px; text-transform: capitalize; }
+.pe-type.exam { background: var(--red-soft); color: var(--red-text); }
+.pe-type.assignment { background: var(--blue-soft); color: var(--blue-text); }
+.pe-type.quiz { background: var(--amber-soft); color: var(--amber-text); }
+.pe-type.other { background: var(--surface3); color: var(--text2); }
+
+/* ── LEGAL MODAL ── */
+.legal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.legal-overlay.show { opacity: 1; pointer-events: all; }
+.legal-box { background: var(--surface); border-radius: 16px; border: 1px solid var(--line); box-shadow: var(--shadow-lg); padding: 1.5rem; width: 480px; max-width: 92vw; max-height: 80vh; overflow-y: auto; transform: translateY(8px); transition: transform 0.2s; }
+.legal-overlay.show .legal-box { transform: translateY(0); }
+.legal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.legal-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.legal-close { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--line2); background: var(--surface2); color: var(--text2); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.legal-body { font-size: 12px; color: var(--text2); line-height: 1.8; }
+.legal-body h3 { font-size: 13px; font-weight: 700; color: var(--text); margin: 1rem 0 4px; }
+.legal-body h3:first-child { margin-top: 0; }
+
+/* ── FOOTER ── */
+footer { border-top: 1px solid var(--line); background: var(--surface); padding: 1rem; margin-top: 2rem; }
+.footer-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.footer-left { font-size: 11px; color: var(--text3); }
+.footer-left strong { color: var(--text2); }
+.footer-links { display: flex; gap: 14px; }
+.footer-links a { font-size: 11px; color: var(--text3); text-decoration: none; cursor: pointer; transition: color 0.12s; }
+.footer-links a:hover { color: var(--text2); }
+
+/* ── MOBILE ── */
+@media (max-width: 640px) {
+  .layout { grid-template-columns: 1fr; }
+  .metric-strip { grid-template-columns: 1fr 1fr; }
+  .metric:last-child { grid-column: span 2; }
+  .hero-features { gap: 6px; }
+  .footer-inner { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+<main>
+<div id="wrap">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="logo">My<em>Syllabi</em></div>
+      <div class="tagline">Turn your syllabi into a smart calendar</div>
+    </div>
+    <button class="tbtn" id="tbtn" onclick="toggleTheme()">Dark mode</button>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-title">Stop copying dates.<br><span>Let AI do it for you.</span></div>
+    <div class="hero-sub">Upload your course syllabi and MySyllabi instantly builds an interactive calendar with all your assignments, exams, and deadlines — across every course, in one place.</div>
+    <div class="hero-features">
+      <div class="feature-pill"><div class="fp-dot" style="background:#6366f1"></div>AI-powered parsing</div>
+      <div class="feature-pill"><div class="fp-dot" style="background:#2563eb"></div>Multi-course calendar</div>
+      <div class="feature-pill"><div class="fp-dot" style="background:#16a34a"></div>Google Calendar export</div>
+      <div class="feature-pill"><div class="fp-dot" style="background:#d97706"></div>No account needed</div>
+      <div class="feature-pill"><div class="fp-dot" style="background:#dc2626"></div>Free to use</div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="upload-card">
+    <div id="dz" onclick="document.getElementById('fi').click()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="drop(event)">
+      <input type="file" id="fi" accept=".pdf,.png,.jpg,.jpeg" onchange="handleFile(this.files[0])">
+      <div class="dz-icon">&#128196;</div>
+      <div class="dz-title">Drop a syllabus here</div>
+      <div class="dz-sub">Add one course at a time — PDF or image</div>
+    </div>
+    <div id="fname"></div>
+    <button id="parse-btn" onclick="parse()" disabled>Parse syllabus</button>
+    <div class="or">or</div>
+    <button id="demo-btn" onclick="loadDemo()">Try demo with 3 sample courses</button>
+    <div id="status"></div>
+    <div id="syllabi-list"></div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="main">
+    <div class="metric-strip">
+      <div class="metric">
+        <div class="metric-icon done">&#10003;</div>
+        <div>
+          <div class="metric-num" id="m-done">0</div>
+          <div class="metric-label">Completed</div>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-icon left">&#8987;</div>
+        <div>
+          <div class="metric-num" id="m-left">0</div>
+          <div class="metric-label">Remaining</div>
+        </div>
+      </div>
+      <div class="metric">
+        <div class="metric-icon next">&#128197;</div>
+        <div>
+          <div class="metric-next-val" id="m-next-date">—</div>
+          <div class="metric-next-sub" id="m-next-title">No upcoming events</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="cal-card">
+        <div class="cal-head">
+          <div id="mlabel"></div>
+          <div class="nav">
+            <button class="nbtn" onclick="cm(-1)">&#8249;</button>
+            <button class="nbtn" onclick="cm(1)">&#8250;</button>
+          </div>
+        </div>
+        <div id="filter-row"></div>
+        <table class="cal-table">
+          <thead><tr><th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th></tr></thead>
+          <tbody id="cal-body"></tbody>
+        </table>
+      </div>
+
+      <div class="sb">
+        <div class="sb-card">
+          <div class="sb-title">This semester</div>
+          <div class="stat-g">
+            <div class="stat"><div class="sn" id="se">0</div><div class="sl">Exams</div></div>
+            <div class="stat"><div class="sn" id="sa">0</div><div class="sl">Assignments</div></div>
+            <div class="stat"><div class="sn" id="sq">0</div><div class="sl">Quizzes</div></div>
+            <div class="stat"><div class="sn" id="st">0</div><div class="sl">Total</div></div>
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">Legend</div>
+          <div class="leg"><div class="ldot" style="background:var(--red)"></div>Exam</div>
+          <div class="leg"><div class="ldot" style="background:var(--blue)"></div>Assignment</div>
+          <div class="leg"><div class="ldot" style="background:var(--amber)"></div>Quiz</div>
+          <div class="leg"><div class="ldot" style="background:var(--text3)"></div>Other</div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">Coming up</div>
+          <div id="ulist"></div>
+        </div>
+        <button class="exp-btn" onclick="xport()">Export to Google Calendar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <strong>MySyllabi</strong> &nbsp;·&nbsp; Powered by Claude AI &nbsp;·&nbsp; &copy; 2026
+    </div>
+    <div class="footer-links">
+      <a onclick="openLegal('privacy')">Privacy Policy</a>
+      <a onclick="openLegal('terms')">Terms of Use</a>
+    </div>
+  </div>
+</footer>
+
+<!-- DAY POPUP -->
+<div class="popup-overlay" id="overlay" onclick="closePopup(event)">
+  <div class="popup">
+    <div class="popup-head">
+      <div class="popup-date" id="popup-date"></div>
+      <button class="popup-close" onclick="closePopup()">&#215;</button>
+    </div>
+    <div id="popup-events"></div>
+  </div>
+</div>
+
+<!-- LEGAL MODAL -->
+<div class="legal-overlay" id="legal-overlay" onclick="closeLegal(event)">
+  <div class="legal-box">
+    <div class="legal-head">
+      <div class="legal-title" id="legal-title"></div>
+      <button class="legal-close" onclick="closeLegal()">&#215;</button>
+    </div>
+    <div class="legal-body" id="legal-body"></div>
+  </div>
+</div>
+
+<script>
+const LEGAL = {
+  privacy: {
+    title: 'Privacy Policy',
+    body: `
+      <h3>What we collect</h3>
+      MySyllabi does not collect, store, or transmit any personal information to our servers. Your name, email, and identity are never requested or stored.
+
+      <h3>Your syllabus data</h3>
+      When you upload a syllabus, the file is sent directly to Anthropic's Claude AI API for processing. Extracted events (dates, assignment names, course codes) are stored locally in your browser using localStorage. We have no access to this data. Clearing your browser data removes it permanently.
+
+      <h3>Anthropic's API</h3>
+      Syllabus processing is handled by Anthropic. Please review Anthropic's privacy policy at anthropic.com for details on how they handle submitted content.
+
+      <h3>Cookies</h3>
+      MySyllabi does not use cookies. We use localStorage for saving your calendar data locally on your device.
+
+      <h3>Analytics</h3>
+      We do not use any analytics or tracking services.
+
+      <h3>Changes</h3>
+      We may update this policy as the product evolves. Continued use of MySyllabi constitutes acceptance of any changes.
+
+      <h3>Contact</h3>
+      Questions? Reach out via the MySyllabi GitHub page.
+    `
+  },
+  terms: {
+    title: 'Terms of Use',
+    body: `
+      <h3>Free to use</h3>
+      MySyllabi is a free tool provided for personal, non-commercial use by students.
+
+      <h3>No warranty</h3>
+      MySyllabi is provided "as is" without warranty of any kind. We do not guarantee that the AI will correctly parse every syllabus, and we are not responsible for missed deadlines resulting from incorrect or incomplete parsing. Always verify important dates with your official course materials.
+
+      <h3>Acceptable use</h3>
+      You agree not to use MySyllabi to upload content that is not a course syllabus, attempt to abuse or overload the service, or attempt to reverse-engineer or exploit the application.
+
+      <h3>Rate limits</h3>
+      To ensure fair access for all users, MySyllabi limits parsing to 5 syllabi per hour per user. This limit may change as the service grows.
+
+      <h3>Availability</h3>
+      We do not guarantee uptime or availability. The service may be modified, paused, or discontinued at any time.
+
+      <h3>Intellectual property</h3>
+      MySyllabi is an independent project. "Powered by Claude AI" refers to Anthropic's Claude API. MySyllabi is not affiliated with or endorsed by Anthropic.
+
+      <h3>Changes</h3>
+      These terms may be updated at any time. Continued use constitutes acceptance.
+    `
+  }
+};
+
+let fd=null, ft=null, dark=false;
+let yr=new Date().getFullYear(), mo=new Date().getMonth();
+let syllabi=[], activeCourse='all';
+const M=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const COLORS=['#6366f1','#0284c7','#16a34a','#d97706','#db2777','#7c3aed','#0891b2'];
+function p2(n){ return String(n).padStart(2,'0'); }
+
+const DEMO=[
+  {name:'ECON 101',color:'#6366f1',events:[
+    {title:"Problem Set 1",date:`${yr}-${p2(mo+1)}-06`,type:"assignment",course:"ECON 101"},
+    {title:"Reading Quiz",date:`${yr}-${p2(mo+1)}-08`,type:"quiz",course:"ECON 101"},
+    {title:"Midterm Exam",date:`${yr}-${p2(mo+1)}-16`,type:"exam",course:"ECON 101"},
+    {title:"Essay Draft",date:`${yr}-${p2(mo+1)}-23`,type:"assignment",course:"ECON 101"},
+    {title:"Problem Set 2",date:`${yr}-${p2(mo+1)}-26`,type:"assignment",course:"ECON 101"},
+    {title:"Final Exam",date:`${yr}-${p2(mo+1)}-${new Date(yr,mo+1,0).getDate()}`,type:"exam",course:"ECON 101"},
+  ]},
+  {name:'CS 110',color:'#0284c7',events:[
+    {title:"Lab Report 1",date:`${yr}-${p2(mo+1)}-10`,type:"assignment",course:"CS 110"},
+    {title:"Quiz 1",date:`${yr}-${p2(mo+1)}-13`,type:"quiz",course:"CS 110"},
+    {title:"CS Midterm",date:`${yr}-${p2(mo+1)}-18`,type:"exam",course:"CS 110"},
+    {title:"Lab Report 2",date:`${yr}-${p2(mo+1)}-25`,type:"assignment",course:"CS 110"},
+  ]},
+  {name:'INFO SCI 161',color:'#16a34a',events:[
+    {title:"Data Analysis HW",date:`${yr}-${p2(mo+1)}-11`,type:"assignment",course:"INFO SCI 161"},
+    {title:"Project Proposal",date:`${yr}-${p2(mo+1)}-20`,type:"other",course:"INFO SCI 161"},
+    {title:"HW 2",date:`${yr}-${p2(mo+1)}-27`,type:"assignment",course:"INFO SCI 161"},
+  ]},
+];
+
+function saveState(){ try{ localStorage.setItem('mysyllabi_v3', JSON.stringify({syllabi,yr,mo})); }catch(e){} }
+function loadState(){ try{ const d=localStorage.getItem('mysyllabi_v3'); if(d){ const s=JSON.parse(d); syllabi=s.syllabi||[]; yr=s.yr||new Date().getFullYear(); mo=s.mo||new Date().getMonth(); if(syllabi.length) go(); } }catch(e){} }
+
+function toggleTheme(){ dark=!dark; document.body.classList.toggle('dark',dark); document.getElementById('tbtn').textContent=dark?'Light mode':'Dark mode'; }
+function ss(m,t=''){ const el=document.getElementById('status'); el.textContent=m; el.className=t; }
+function drop(e){ e.preventDefault(); document.getElementById('dz').classList.remove('over'); const f=e.dataTransfer.files[0]; if(f) handleFile(f); }
+
+function handleFile(f){
+  ft=f.type;
+  document.getElementById('fname').textContent='Loaded: '+f.name;
+  ss('File ready — click "Parse syllabus" to continue.');
+  const r=new FileReader();
+  r.onload=e=>{ fd=e.target.result.split(',')[1]; document.getElementById('parse-btn').style.display='block'; document.getElementById('parse-btn').disabled=false; };
+  r.readAsDataURL(f);
+}
+
+function loadDemo(){ syllabi=JSON.parse(JSON.stringify(DEMO)); yr=new Date().getFullYear(); mo=new Date().getMonth(); saveState(); go(); ss('Demo loaded — 3 sample courses added.','ok'); }
+
+async function parse(){
+  if(!fd) return;
+  const btn=document.getElementById('parse-btn');
+  btn.disabled=true; btn.textContent='Parsing...';
+  ss('Reading your syllabus...');
+  const isPDF=ft==='application/pdf';
+  const prompt=`Extract every assignment, exam, quiz, project, paper, presentation, or deadline.\nReturn ONLY a JSON array. Each item: {"title":"short name","date":"YYYY-MM-DD","type":"exam|assignment|quiz|other","course":"course name or code"}\nNo markdown. Return [] if nothing found.`;
+  try{
+    const block=isPDF
+      ?{type:'document',source:{type:'base64',media_type:'application/pdf',data:fd}}
+      :{type:'image',source:{type:'base64',media_type:ft,data:fd}};
+    const res=await fetch('/api/parse',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[block,{type:'text',text:prompt}]}]})
+    });
+    const data=await res.json();
+    if(data.error){ ss('Error: '+data.error,'err'); btn.disabled=false; btn.textContent='Parse syllabus'; return; }
+    const txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const events=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    if(!events.length){ ss('No events found. Try a clearer PDF or image.','err'); btn.disabled=false; btn.textContent='Parse syllabus'; return; }
+    const name=events[0]?.course||'Course '+(syllabi.length+1);
+    syllabi.push({name,color:COLORS[syllabi.length%COLORS.length],events});
+    const first=new Date(events[0].date+'T12:00:00'); yr=first.getFullYear(); mo=first.getMonth();
+    ss(events.length+' events added for '+name,'ok');
+    fd=null; ft=null;
+    document.getElementById('fname').textContent='';
+    document.getElementById('fi').value='';
+    btn.style.display='none'; btn.textContent='Parse syllabus';
+    saveState(); go();
+  }catch(e){ ss('Error: '+e.message,'err'); }
+  btn.disabled=false; btn.textContent='Parse syllabus';
+}
+
+function removeSyllabus(i){ syllabi.splice(i,1); if(activeCourse===i+'') activeCourse='all'; saveState(); if(syllabi.length) go(); else{ document.getElementById('main').style.display='none'; renderChips(); } }
+function allEvents(){ return syllabi.flatMap(s=>s.events); }
+function filteredEvents(){ return activeCourse==='all'?allEvents():syllabi[parseInt(activeCourse)]?.events||[]; }
+
+function go(){
+  document.getElementById('main').style.display='block';
+  renderChips(); renderFilters(); stats(); metrics(); cal(); upcoming();
+}
+
+function renderChips(){
+  document.getElementById('syllabi-list').innerHTML=syllabi.map((s,i)=>
+    `<div class="syllabus-chip"><div class="chip-dot" style="background:${s.color}"></div>${s.name}<span class="chip-x" onclick="removeSyllabus(${i})">&#215;</span></div>`).join('');
+}
+
+function renderFilters(){
+  document.getElementById('filter-row').innerHTML=
+    `<button class="filter-chip all ${activeCourse==='all'?'active':''}" onclick="setFilter('all')">All courses</button>`+
+    syllabi.map((s,i)=>`<button class="filter-chip ${activeCourse===i+''?'active':''}" style="${activeCourse===i+''?'background:'+s.color+';color:#fff;border-color:'+s.color:''}" onclick="setFilter('${i}')">${s.name}</button>`).join('');
+}
+
+function setFilter(v){ activeCourse=v; renderFilters(); stats(); metrics(); cal(); upcoming(); }
+
+function stats(){
+  const evs=filteredEvents();
+  document.getElementById('se').textContent=evs.filter(e=>e.type==='exam').length;
+  document.getElementById('sa').textContent=evs.filter(e=>e.type==='assignment').length;
+  document.getElementById('sq').textContent=evs.filter(e=>e.type==='quiz').length;
+  document.getElementById('st').textContent=evs.length;
+}
+
+function metrics(){
+  const now=new Date(); const evs=filteredEvents();
+  const done=evs.filter(ev=>new Date(ev.date+'T23:59:00')<now).length;
+  document.getElementById('m-done').textContent=done;
+  document.getElementById('m-left').textContent=evs.length-done;
+  const next=evs.filter(ev=>new Date(ev.date+'T23:59:00')>=now).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  if(next){
+    const d=new Date(next.date+'T12:00:00');
+    document.getElementById('m-next-date').textContent=MS[d.getMonth()]+' '+d.getDate();
+    document.getElementById('m-next-title').textContent=next.title+(next.course?' · '+next.course:'');
+  } else {
+    document.getElementById('m-next-date').textContent='—';
+    document.getElementById('m-next-title').textContent='No upcoming events';
+  }
+}
+
+function cal(){
+  document.getElementById('mlabel').textContent=M[mo]+' '+yr;
+  const tbody=document.getElementById('cal-body'); tbody.innerHTML='';
+  const firstDay=new Date(yr,mo,1).getDay();
+  const dim=new Date(yr,mo+1,0).getDate();
+  const dip=new Date(yr,mo,0).getDate();
+  const td=new Date();
+  const evs=filteredEvents();
+  const byDay={};
+  evs.forEach(ev=>{ const d=new Date(ev.date+'T12:00:00'); if(d.getFullYear()===yr&&d.getMonth()===mo){ const n=d.getDate(); if(!byDay[n])byDay[n]=[]; byDay[n].push(ev); } });
+  const cells=[];
+  for(let i=firstDay-1;i>=0;i--) cells.push({day:dip-i,cur:false});
+  for(let d=1;d<=dim;d++) cells.push({day:d,cur:true});
+  while(cells.length%7!==0) cells.push({day:cells.length-firstDay-dim+1,cur:false});
+  for(let r=0;r<cells.length/7;r++){
+    const tr=document.createElement('tr');
+    for(let c=0;c<7;c++){
+      const cell=cells[r*7+c];
+      const td2=document.createElement('td');
+      const isToday=cell.cur&&cell.day===td.getDate()&&mo===td.getMonth()&&yr===td.getFullYear();
+      if(!cell.cur) td2.className='other';
+      if(isToday) td2.className='today';
+      const num=document.createElement('span'); num.className='cnum'; num.textContent=cell.day; td2.appendChild(num);
+      if(cell.cur&&byDay[cell.day]){
+        const list=byDay[cell.day];
+        td2.onclick=()=>openPopup(cell.day,list);
+        if(list.length===1){ const pill=document.createElement('div'); pill.className='tiny-pill '+(list[0].type||'other'); pill.textContent=list[0].title; td2.appendChild(pill); }
+        else{ const row=document.createElement('div'); row.className='dot-row'; list.forEach(ev=>{ const d2=document.createElement('div'); d2.className='dot '+(ev.type||'other'); d2.title=ev.title; row.appendChild(d2); }); td2.appendChild(row); }
+      }
+      tr.appendChild(td2);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+function upcoming(){
+  const now=new Date();
+  const list=filteredEvents().filter(ev=>new Date(ev.date+'T23:59:00')>=now).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5);
+  const ul=document.getElementById('ulist'); ul.innerHTML='';
+  if(!list.length){ ul.innerHTML='<div class="no-up">Nothing coming up</div>'; return; }
+  list.forEach(ev=>{
+    const d=new Date(ev.date+'T12:00:00'); const ds=MS[d.getMonth()]+' '+d.getDate();
+    const row=document.createElement('div'); row.className='up-item';
+    row.innerHTML=`<div class="udot ${ev.type||'other'}"></div><div class="up-info"><div class="up-name">${ev.title}</div>${ev.course?'<div class="up-course">'+ev.course+'</div>':''}</div><div class="up-date">${ds}</div>`;
+    ul.appendChild(row);
+  });
+}
+
+function openPopup(day,events){
+  document.getElementById('popup-date').textContent=M[mo]+' '+day+', '+yr;
+  document.getElementById('popup-events').innerHTML=events.map(ev=>`
+    <div class="popup-event ${ev.type||'other'}">
+      <div class="pe-dot ${ev.type||'other'}"></div>
+      <div><div class="pe-title">${ev.title}</div><div class="pe-meta">${ev.course||''}</div><span class="pe-type ${ev.type||'other'}">${ev.type||'other'}</span></div>
+    </div>`).join('');
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closePopup(e){ if(!e||e.target===document.getElementById('overlay')) document.getElementById('overlay').classList.remove('show'); }
+
+function openLegal(type){
+  const l=LEGAL[type];
+  document.getElementById('legal-title').textContent=l.title;
+  document.getElementById('legal-body').innerHTML=l.body;
+  document.getElementById('legal-overlay').classList.add('show');
+}
+
+function closeLegal(e){ if(!e||e.target===document.getElementById('legal-overlay')) document.getElementById('legal-overlay').classList.remove('show'); }
+
+function cm(d){ mo+=d; if(mo>11){mo=0;yr++;} if(mo<0){mo=11;yr--;} saveState(); cal(); }
+
+function xport(){
+  const evs=filteredEvents(); if(!evs.length) return;
+  let ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MySyllabi//EN\r\nCALSCALE:GREGORIAN\r\n';
+  evs.forEach((ev,i)=>{ const d=ev.date.replace(/-/g,''); ics+=`BEGIN:VEVENT\r\nUID:ms-${i}-${Date.now()}@ms\r\nDTSTART;VALUE=DATE:${d}\r\nDTEND;VALUE=DATE:${d}\r\nSUMMARY:${ev.title}${ev.course?' ('+ev.course+')':''}\r\nEND:VEVENT\r\n`; });
+  ics+='END:VCALENDAR';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'})); a.download='mysyllabi.ics'; a.click();
+}
+
+loadState();
+</script>
+</body>
+</html>
