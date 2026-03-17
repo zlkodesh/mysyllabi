@@ -10,7 +10,6 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname)));
 
 // Rate limiter — 5 parses per IP per hour
 const limiter = rateLimit({
@@ -23,8 +22,7 @@ const limiter = rateLimit({
   }
 });
 
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'mysyllabi.html')));
-
+// API route FIRST — before static files
 app.post('/api/parse', limiter, async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'Server configuration error.' });
@@ -46,6 +44,10 @@ app.post('/api/parse', limiter, async (req, res) => {
     res.status(500).json({ error: 'Failed to reach Anthropic API.' });
   }
 });
+
+// Static files AFTER API routes
+app.use(express.static(path.join(__dirname)));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'mysyllabi.html')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`MySyllabi running on port ${PORT}`));
