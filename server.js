@@ -23,7 +23,7 @@ const limiter = rateLimit({
   }
 });
 
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'mysyllabi.html')));
 
 app.post('/api/parse', limiter, async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
