@@ -416,7 +416,7 @@ const LEGAL = {
   }
 };
 
-let fd=null, ft=null, dark=false;
+let fd=null, ft=null, dark=false, isDemo=false;
 let yr=new Date().getFullYear(), mo=new Date().getMonth();
 let syllabi=[], activeCourse='all';
 const M=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -462,9 +462,10 @@ function handleFile(f){
   r.readAsDataURL(f);
 }
 
-function loadDemo(){ syllabi=JSON.parse(JSON.stringify(DEMO)); yr=new Date().getFullYear(); mo=new Date().getMonth(); saveState(); go(); ss('Demo loaded — 3 sample courses added.','ok'); }
+function loadDemo(){ isDemo=true; syllabi=JSON.parse(JSON.stringify(DEMO)); yr=new Date().getFullYear(); mo=new Date().getMonth(); saveState(); go(); ss('Demo loaded — 3 sample courses added.','ok'); }
 
 async function parse(){
+  if(isDemo){ syllabi=[]; isDemo=false; renderChips(); }
   if(!fd) return;
   const btn=document.getElementById('parse-btn');
   btn.disabled=true; btn.textContent='Parsing...';
