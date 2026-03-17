@@ -464,6 +464,19 @@ function handleFile(f){
 
 function loadDemo(){ isDemo=true; syllabi=JSON.parse(JSON.stringify(DEMO)); yr=new Date().getFullYear(); mo=new Date().getMonth(); saveState(); go(); ss('Demo loaded — 3 sample courses added.','ok'); }
 
+function handleError(e){
+  const msg = e.message || '';
+  if(msg.includes('<!DOCTYPE') || msg.includes('not valid JSON') || msg.includes('Unexpected token')){
+    ss('File too large or unreadable. Try compressing your PDF at smallpdf.com or upload a screenshot instead.','err');
+  } else if(msg.includes('Failed to fetch') || msg.includes('NetworkError')){
+    ss('Connection error. Please check your internet and try again.','err');
+  } else if(msg.includes('rate limit') || msg.includes('429')){
+    ss('Too many requests. You can parse up to 5 syllabi per hour — please try again later.','err');
+  } else {
+    ss('Something went wrong. Please try again or use a different file.','err');
+  }
+}
+
 async function parse(){
   if(isDemo){ syllabi=[]; isDemo=false; renderChips(); }
   if(!fd) return;
@@ -495,7 +508,7 @@ async function parse(){
     document.getElementById('fi').value='';
     btn.style.display='none'; btn.textContent='Parse syllabus';
     saveState(); go();
-  }catch(e){ ss('Error: '+e.message,'err'); }
+  }catch(e){ handleError(e); }
   btn.disabled=false; btn.textContent='Parse syllabus';
 }
 
