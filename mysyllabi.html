@@ -513,7 +513,7 @@ async function parse(){
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[block,{type:'text',text:prompt}]}]})
     });
     const data=await res.json();
-    if(data.error){ ss('Error: '+data.error,'err'); btn.disabled=false; btn.textContent='Parse syllabus'; return; }
+    if(data.error){ const errMsg = typeof data.error === 'object' ? (data.error.message || JSON.stringify(data.error)) : data.error; ss('Error: '+errMsg,'err'); btn.disabled=false; btn.textContent='Parse syllabus'; return; }
     const txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     const events=JSON.parse(txt.replace(/```json|```/g,'').trim());
     if(!events.length){ ss('No events found. Try a clearer PDF or image.','err'); btn.disabled=false; btn.textContent='Parse syllabus'; return; }
