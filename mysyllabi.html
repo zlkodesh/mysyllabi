@@ -510,7 +510,7 @@ async function parse(){
     const res=await fetch('/api/parse',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[block,{type:'text',text:prompt}]}]})
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:[block,{type:'text',text:prompt}]}]})
     });
     const data=await res.json();
     if(data.error){ const errMsg = typeof data.error === 'object' ? (data.error.message || JSON.stringify(data.error)) : data.error; ss('Error: '+errMsg,'err'); btn.disabled=false; btn.textContent='Parse syllabus'; return; }
