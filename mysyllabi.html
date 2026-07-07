@@ -259,9 +259,19 @@ footer { border-top: 1px solid var(--line); background: var(--surface); padding:
     <div id="fname"></div>
     <button id="parse-btn" onclick="parse()" disabled>Parse syllabus</button>
     <div class="or">or</div>
-    <button id="demo-btn" onclick="loadDemo()">Try demo with 3 sample courses</button>
+    <button id="demo-btn" onclick="loadDemo()">See a live demo</button>
     <div id="status"></div>
     <div id="syllabi-list"></div>
+    <div id="clear-wrap" style="display:none;margin-top:8px;">
+  <div id="clear-confirm" style="display:none;background:var(--red-soft);border-radius:8px;padding:8px 12px;display:none;align-items:center;justify-content:space-between;gap:8px;">
+    <span style="font-size:12px;color:var(--red-text);">Remove all courses?</span>
+    <div style="display:flex;gap:6px;">
+      <button onclick="doClear()" style="padding:4px 12px;border-radius:6px;border:none;background:var(--red);color:#fff;font-size:11px;font-weight:600;cursor:pointer;">Yes, clear</button>
+      <button onclick="cancelClear()" style="padding:4px 12px;border-radius:6px;border:1px solid var(--line2);background:var(--surface);color:var(--text2);font-size:11px;font-weight:500;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+  <button id="clear-btn" onclick="showClearConfirm()" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--red);background:transparent;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.12s;">Clear all courses</button>
+</div>
   </div>
 
   <!-- MAIN APP -->
@@ -388,7 +398,7 @@ const LEGAL = {
       MySyllabi does not use cookies. We use localStorage for saving your calendar data locally on your device.
 
       <h3>Analytics</h3>
-      We do not use any analytics or tracking services.
+      MySyllabi uses Google Analytics to collect anonymous usage data including page visits and general traffic patterns. No personally identifiable information is collected. You can opt out at any time using the Google Analytics Opt-out Browser Add-on.
 
       <h3>Changes</h3>
       We may update this policy as the product evolves. Continued use of MySyllabi constitutes acceptance of any changes.
@@ -433,24 +443,24 @@ const COLORS=['#6366f1','#0284c7','#16a34a','#d97706','#db2777','#7c3aed','#0891
 function p2(n){ return String(n).padStart(2,'0'); }
 
 const DEMO=[
-  {name:'ECON 101',color:'#6366f1',events:[
-    {title:"Problem Set 1",date:`${yr}-${p2(mo+1)}-06`,type:"assignment",course:"ECON 101"},
-    {title:"Reading Quiz",date:`${yr}-${p2(mo+1)}-08`,type:"quiz",course:"ECON 101"},
-    {title:"Midterm Exam",date:`${yr}-${p2(mo+1)}-16`,type:"exam",course:"ECON 101"},
-    {title:"Essay Draft",date:`${yr}-${p2(mo+1)}-23`,type:"assignment",course:"ECON 101"},
-    {title:"Problem Set 2",date:`${yr}-${p2(mo+1)}-26`,type:"assignment",course:"ECON 101"},
-    {title:"Final Exam",date:`${yr}-${p2(mo+1)}-${new Date(yr,mo+1,0).getDate()}`,type:"exam",course:"ECON 101"},
+  {name:'Math 101',color:'#6366f1',events:[
+    {title:"Problem Set 1",date:`${yr}-${p2(mo+1)}-06`,type:"assignment",course:"Math 101"},
+    {title:"Reading Quiz",date:`${yr}-${p2(mo+1)}-08`,type:"quiz",course:"Math 101"},
+    {title:"Midterm Exam",date:`${yr}-${p2(mo+1)}-16`,type:"exam",course:"Math 101"},
+    {title:"Essay Draft",date:`${yr}-${p2(mo+1)}-23`,type:"assignment",course:"Math 101"},
+    {title:"Problem Set 2",date:`${yr}-${p2(mo+1)}-26`,type:"assignment",course:"Math 101"},
+    {title:"Final Exam",date:`${yr}-${p2(mo+1)}-${new Date(yr,mo+1,0).getDate()}`,type:"exam",course:"Math 101"},
   ]},
-  {name:'CS 110',color:'#0284c7',events:[
-    {title:"Lab Report 1",date:`${yr}-${p2(mo+1)}-10`,type:"assignment",course:"CS 110"},
-    {title:"Quiz 1",date:`${yr}-${p2(mo+1)}-13`,type:"quiz",course:"CS 110"},
-    {title:"CS Midterm",date:`${yr}-${p2(mo+1)}-18`,type:"exam",course:"CS 110"},
-    {title:"Lab Report 2",date:`${yr}-${p2(mo+1)}-25`,type:"assignment",course:"CS 110"},
+  {name:'English 102',color:'#0284c7',events:[
+    {title:"Lab Report 1",date:`${yr}-${p2(mo+1)}-10`,type:"assignment",course:"English 102"},
+    {title:"Quiz 1",date:`${yr}-${p2(mo+1)}-13`,type:"quiz",course:"English 102"},
+    {title:"CS Midterm",date:`${yr}-${p2(mo+1)}-18`,type:"exam",course:"English 102"},
+    {title:"Lab Report 2",date:`${yr}-${p2(mo+1)}-25`,type:"assignment",course:"English 102"},
   ]},
-  {name:'INFO SCI 161',color:'#16a34a',events:[
-    {title:"Data Analysis HW",date:`${yr}-${p2(mo+1)}-11`,type:"assignment",course:"INFO SCI 161"},
-    {title:"Project Proposal",date:`${yr}-${p2(mo+1)}-20`,type:"other",course:"INFO SCI 161"},
-    {title:"HW 2",date:`${yr}-${p2(mo+1)}-27`,type:"assignment",course:"INFO SCI 161"},
+  {name:'History 201',color:'#16a34a',events:[
+    {title:"Data Analysis HW",date:`${yr}-${p2(mo+1)}-11`,type:"assignment",course:"History 201"},
+    {title:"Project Proposal",date:`${yr}-${p2(mo+1)}-20`,type:"other",course:"History 201"},
+    {title:"HW 2",date:`${yr}-${p2(mo+1)}-27`,type:"assignment",course:"History 201"},
   ]},
 ];
 
@@ -530,6 +540,7 @@ function go(){
 }
 
 function renderChips(){
+  document.getElementById('clear-wrap').style.display=syllabi.length?'block':'none';
   document.getElementById('syllabi-list').innerHTML=syllabi.map((s,i)=>
     `<div class="syllabus-chip"><div class="chip-dot" style="background:${s.color}"></div>${s.name}<span class="chip-x" onclick="removeSyllabus(${i})">&#215;</span></div>`).join('');
 }
@@ -643,6 +654,30 @@ function xport(){
   evs.forEach((ev,i)=>{ const d=ev.date.replace(/-/g,''); ics+=`BEGIN:VEVENT\r\nUID:ms-${i}-${Date.now()}@ms\r\nDTSTART;VALUE=DATE:${d}\r\nDTEND;VALUE=DATE:${d}\r\nSUMMARY:${ev.title}${ev.course?' ('+ev.course+')':''}\r\nEND:VEVENT\r\n`; });
   ics+='END:VCALENDAR';
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'})); a.download='mysyllabi.ics'; a.click();
+}
+
+function showClearConfirm(){
+  document.getElementById('clear-btn').style.display='none';
+  const c=document.getElementById('clear-confirm');
+  c.style.display='flex';
+}
+function cancelClear(){
+  document.getElementById('clear-confirm').style.display='none';
+  document.getElementById('clear-btn').style.display='block';
+}
+function doClear(){
+  syllabi=[]; activeCourse='all'; isDemo=false;
+  try{ localStorage.removeItem('mysyllabi_v3'); }catch(e){}
+  document.getElementById('main').style.display='none';
+  document.getElementById('clear-wrap').style.display='none';
+  document.getElementById('clear-confirm').style.display='none';
+  document.getElementById('clear-btn').style.display='block';
+  document.getElementById('syllabi-list').innerHTML='';
+  document.getElementById('fname').textContent='';
+  document.getElementById('fi').value='';
+  document.getElementById('parse-btn').style.display='none';
+  fd=null; ft=null;
+  ss('All courses cleared. Upload a new syllabus to get started.','ok');
 }
 
 loadState();
