@@ -654,7 +654,10 @@ function xport(){
   evs.forEach((ev,i)=>{ const d=ev.date.replace(/-/g,''); ics+=`BEGIN:VEVENT\r\nUID:ms-${i}-${Date.now()}@ms\r\nDTSTART;VALUE=DATE:${d}\r\nDTEND;VALUE=DATE:${d}\r\nSUMMARY:${ev.title}${ev.course?' ('+ev.course+')':''}\r\nEND:VEVENT\r\n`; });
   ics+='END:VCALENDAR';
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'})); a.download='mysyllabi.ics'; a.click();
+  setTimeout(function(){ document.getElementById('export-overlay').classList.add('show'); }, 500);
 }
+
+function closeExport(e){ if(!e||e.target===document.getElementById('export-overlay')) document.getElementById('export-overlay').classList.remove('show'); }
 
 function showClearConfirm(){
   document.getElementById('clear-btn').style.display='none';
